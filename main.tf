@@ -8,7 +8,7 @@
  *   source = "dod-iac/ssm-kms-key/aws"
  *
  *   name = format("alias/app-%s-ssm-%s", var.application, var.environment)
- *   description = format("A KMS key used to encrypt ssm volumes for %s:%s.", var.application, var.environment)
+ *   description = format("A KMS key used to encrypt parameters stored in AWS SSM Parameter Store for %s:%s.", var.application, var.environment)
  *   tags = {
  *     Application = var.application
  *     Environment = var.environment
@@ -34,6 +34,7 @@ data "aws_region" "current" {}
 
 data "aws_partition" "current" {}
 
+# https://docs.aws.amazon.com/kms/latest/developerguide/services-parameter-store.html
 data "aws_iam_policy_document" "ssm" {
   policy_id = "key-policy-ssm"
   statement {
@@ -57,8 +58,11 @@ data "aws_iam_policy_document" "ssm" {
   statement {
     sid = "Allow SSM to use the key"
     actions = [
+      # To encrypt a standard secure string parameter value, the user needs kms:Encrypt permission.
       "kms:Encrypt",
+      # To decrypt either type of secure string parameter value, the user needs kms:Decrypt permission.
       "kms:Decrypt",
+      # To encrypt an advanced secure string parameter value, the user needs kms:GenerateDataKey permission.
       "kms:GenerateDataKey*",
     ]
     effect = "Allow"
